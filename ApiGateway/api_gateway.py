@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-IA_CONTAINER_URL = "http://ia_container:5000/process_image"
+IA_CONTAINER_URL = "http://ia_container:5001/process_image"
 
 time_start = time.time()
 
@@ -33,4 +33,4 @@ def upload_image():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=5000)
