@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-IA_CONTAINER_URL = "http://ia_container:5001/process_image"
+IA_CONTAINER_URL = "http://ia_container:5001"
 
 time_start = time.time()
 
