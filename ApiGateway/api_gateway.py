@@ -1,11 +1,21 @@
 # api_gateway.py
 
-from flask import Flask, request, jsonify
+import time
+
 import requests
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 IA_CONTAINER_URL = "http://ia_container:5000/process_image"
+
+time_start = time.time()
+
+
+@app.route('/hc', methods=['GET'])
+def hc():
+    time_current = time.time()
+    return jsonify({"status": "ok", "uptime": time_current - time_start})
 
 
 @app.route('/upload_image', methods=['POST'])
