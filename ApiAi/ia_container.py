@@ -1,11 +1,14 @@
 # ia_container.py
-from flask import Flask, request, send_file
-from PIL import Image, ImageDraw
 import io
-import time
 import logging
+import time
+
+from PIL import Image, ImageDraw
+from flask import Flask, request, send_file
 
 app = Flask(__name__)
+
+time_start = time.time()
 
 logging.basicConfig(filename='ia_container.log', level=logging.INFO)
 
@@ -18,6 +21,12 @@ def detect_faces(image):
 def is_minor(face_image):
     # Simulación de predicción de menor de edad
     return True
+
+
+@app.route('/hc', methods=['GET'])
+def hc():
+    time_current = time.time()
+    return {'status': 'ok', 'uptime': time_current - time_start}
 
 
 @app.route('/process_image', methods=['POST'])
@@ -61,4 +70,4 @@ def process_image():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)

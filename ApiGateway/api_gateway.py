@@ -18,6 +18,12 @@ def hc():
     return jsonify({"status": "ok", "uptime": time_current - time_start})
 
 
+@app.route('/hc_model', methods=['GET'])
+def hc_model():
+    response = requests.get(IA_CONTAINER_URL + "/hc")
+    return response.json(), response.status_code
+
+
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:

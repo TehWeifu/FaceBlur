@@ -5,5 +5,15 @@ services:
     build: ./ApiGateway
     ports:
       - "5000:5000"
-    expose:
-      - "5000"
+    networks:
+      - api-to-ia
+
+
+  ai_model:
+    build: ./ApiAi
+    networks:
+      - api-to-ia
+
+networks:
+  api-to-ia:
+    driver: bridge
