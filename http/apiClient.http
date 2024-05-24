@@ -12,5 +12,5 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="sampleFile.png"
 Content-Type: image/png
 
-< ./imgs/adults.png
+< ./imgs/toddler.png
 --WebAppBoundary--

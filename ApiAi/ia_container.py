@@ -2,21 +2,39 @@
 
 import io
 import logging
+import sys
+from logging import Logger
 from time import time
 
+import cv2
 import numpy as np
+import tensorflow as tf
 from PIL import Image
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from ultralytics import YOLO
 
+IMG_SIZE = (200, 200)
 PIXEL_SIZE = 5
+AGE_MODEL_THRESHOLD = 0.3
 
 app = Flask(__name__)
 
 server_ts_start = time()
 logging.basicConfig(filename='ia_container.log', level=logging.INFO)
 
-face_detection_model = YOLO('models/face-detection.pt')
+face_detection_model = YOLO('models/FaceDetectionNet.pt')
+age_model = tf.keras.models.load_model('models/AgeNet.keras')
+
+
+def get_debug_logger(name: str) -> Logger:
+    logging.basicConfig(level=logging.DEBUG)
+    logger = Logger(name)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    return logger
 
 
 def detect_faces(image):
@@ -34,7 +52,13 @@ def detect_faces(image):
 def is_minor(image):
     start = time()
 
-    result = True
+    image = image[:, :, :3]
+    image = cv2.resize(image, IMG_SIZE, interpolation=cv2.INTER_AREA)
+    image = image / 255.0
+    image = np.expand_dims(image, axis=0)
+
+    prediction = age_model.predict(image, verbose=False)
+    result = prediction[0][0] > AGE_MODEL_THRESHOLD
 
     end = time()
     logging.info(f"Minor prediction time: {end - start}")
@@ -75,8 +99,13 @@ def blur():
     try:
         request_ts_start = time()
 
+        # Image validation
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+
         image = Image.open(request.files['image'])
 
+        # Face detection
         boxes = detect_faces(image)
 
         for box in boxes:
@@ -95,11 +124,13 @@ def blur():
             img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x] = face
             image = Image.fromarray(img_array)
 
-        image = image.convert('RGB')
+        # Return the image pixelated as an API response
         output = io.BytesIO()
+        image = image.convert('RGB')
         image.save(output, format='JPEG')
         output.seek(0)
         return send_file(output, mimetype='image/jpeg')
+
     except Exception as e:
         logging.error(f"Error processing image: {e}")
         return {'error': 'Failed to process image'}, 500

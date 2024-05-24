@@ -4,3 +4,4 @@ pillow
 ultralytics
 numpy
 opencv-python-headless
+tensorflow
