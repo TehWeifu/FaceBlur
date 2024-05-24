@@ -7,7 +7,8 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-IA_CONTAINER_URL = "http://ai_model:5001"
+# IA_CONTAINER_URL = "http://ai_model:5001"
+IA_CONTAINER_URL = "http://localhost:5001"
 
 time_start = time.time()
 
@@ -24,13 +25,13 @@ def hc_model():
     return response.json(), response.status_code
 
 
-@app.route('/upload_image', methods=['POST'])
-def upload_image():
+@app.route('/blur', methods=['POST'])
+def blur():
     if 'image' not in request.files:
         return jsonify({"error": "No image file provided"}), 400
 
     image = request.files['image']
-    response = requests.post(IA_CONTAINER_URL, files={'image': image})
+    response = requests.post(IA_CONTAINER_URL + "/blur", files={'image': image})
 
     if response.status_code == 200:
         return response.content, 200, {'Content-Type': 'image/jpeg'}

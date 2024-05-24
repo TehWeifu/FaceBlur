@@ -1,0 +1,16 @@
+### Api gateway health check
+GET {{host}}:5000/hc
+
+### AI service health check
+GET {{host}}:5000/hc_model
+
+### Blur a face
+POST {{host}}:5000/blur
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="sampleFile.png"
+Content-Type: image/png
+
+< ./imgs/adults.png
+--WebAppBoundary--

@@ -1,72 +1,108 @@
 # ia_container.py
+
 import io
 import logging
-import time
+from time import time
 
-from PIL import Image, ImageDraw
+import numpy as np
+from PIL import Image
 from flask import Flask, request, send_file
+from ultralytics import YOLO
+
+PIXEL_SIZE = 5
 
 app = Flask(__name__)
 
-time_start = time.time()
-
+server_ts_start = time()
 logging.basicConfig(filename='ia_container.log', level=logging.INFO)
+
+face_detection_model = YOLO('FaceDetection/models/face-detection.pt')
 
 
 def detect_faces(image):
-    # Simulación de detección de caras (coordenadas aleatorias)
-    return [(50, 50, 150, 150), (200, 200, 300, 300)]
+    start = time()
+
+    results = face_detection_model(image)
+    boxes = results[0].boxes
+
+    end = time()
+    logging.info(f"Face detection time: {end - start}")
+
+    return boxes
 
 
-def is_minor(face_image):
-    # Simulación de predicción de menor de edad
-    return True
+def is_minor(image):
+    start = time()
+
+    result = True
+
+    end = time()
+    logging.info(f"Minor prediction time: {end - start}")
+
+    return result
+
+
+def pixel_face(face_image):
+    face_image = Image.fromarray(face_image)
+
+    width, height = face_image.size
+
+    # Resize the image to a smaller size
+    small_face = face_image.resize(
+        (width // PIXEL_SIZE, height // PIXEL_SIZE),
+        resample=Image.NEAREST
+    )
+
+    # Resize the image back to its original size
+    pixelated_image = small_face.resize(
+        (width, height),
+        resample=Image.NEAREST
+    )
+
+    pixelated_image = np.array(pixelated_image)
+
+    return pixelated_image
 
 
 @app.route('/hc', methods=['GET'])
 def hc():
-    time_current = time.time()
-    return {'status': 'ok', 'uptime': time_current - time_start}
+    server_ts_current = time()
+    return {'status': 'ok', 'uptime': server_ts_current - server_ts_start}
 
 
-@app.route('/process_image', methods=['POST'])
-def process_image():
-    start_time = time.time()
-    image = Image.open(request.files['image'])
-    faces = detect_faces(image)
-    face_detection_time = time.time() - start_time
+@app.route('/blur', methods=['POST'])
+def blur():
+    try:
+        request_ts_start = time()
 
-    draw = ImageDraw.Draw(image)
-    log_data = {
-        'request_time': time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
-        'faces': [],
-        'face_detection_time_ms': face_detection_time * 1000,
-        'age_prediction_time_ms': 0,
-        'total_time_ms': 0
-    }
+        image = Image.open(request.files['image'])
 
-    age_prediction_start_time = time.time()
-    for face in faces:
-        face_image = image.crop(face)
-        if is_minor(face_image):
-            draw.rectangle(face, fill='black')  # Pixelar cara
-        log_data['faces'].append({
-            'coordinates': face,
-            'is_minor': is_minor(face_image)
-        })
+        boxes = detect_faces(image)
 
-    age_prediction_time = time.time() - age_prediction_start_time
-    total_time = time.time() - start_time
+        for box in boxes:
+            top_left_x = int(box.xyxy.tolist()[0][0])
+            top_left_y = int(box.xyxy.tolist()[0][1])
+            bottom_right_x = int(box.xyxy.tolist()[0][2])
+            bottom_right_y = int(box.xyxy.tolist()[0][3])
 
-    log_data['age_prediction_time_ms'] = age_prediction_time * 1000
-    log_data['total_time_ms'] = total_time * 1000
+            # Create a new image with the face detected
+            img_array = np.array(image)
+            face = img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
 
-    logging.info(log_data)
+            if is_minor(face):
+                face = pixel_face(face)
 
-    output = io.BytesIO()
-    image.save(output, format='JPEG')
-    output.seek(0)
-    return send_file(output, mimetype='image/jpeg')
+            img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x] = face
+            image = Image.fromarray(img_array)
+
+        image = image.convert('RGB')
+        output = io.BytesIO()
+        image.save(output, format='JPEG')
+        output.seek(0)
+        return send_file(output, mimetype='image/jpeg')
+    except Exception as e:
+        logging.error(f"Error processing image: {e}")
+        return {'error': 'Failed to process image'}, 500
 
 
 if __name__ == '__main__':
