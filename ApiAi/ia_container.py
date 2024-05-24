@@ -16,7 +16,7 @@ app = Flask(__name__)
 server_ts_start = time()
 logging.basicConfig(filename='ia_container.log', level=logging.INFO)
 
-face_detection_model = YOLO('FaceDetection/models/face-detection.pt')
+face_detection_model = YOLO('models/face-detection.pt')
 
 
 def detect_faces(image):
