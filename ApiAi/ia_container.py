@@ -1,8 +1,10 @@
-# ia_container.py
+# ia_container.py: API that receives an image and returns the same image with the minor faces pixelated
 
 import io
 import logging
 import sys
+import uuid
+from datetime import datetime
 from logging import Logger
 from time import time
 
@@ -20,7 +22,6 @@ AGE_MODEL_THRESHOLD = 0.3
 app = Flask(__name__)
 
 server_ts_start = time()
-logging.basicConfig(filename='ia_container.log', level=logging.INFO)
 
 face_detection_model = YOLO('models/FaceDetectionNet.pt')
 age_model = tf.keras.models.load_model('models/AgeNet.keras')
@@ -31,39 +32,57 @@ def get_debug_logger(name: str) -> Logger:
     logger = Logger(name)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s | %(message)s')
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     return logger
 
 
-def detect_faces(image):
+def get_formated_mili_seconds(time_stamp: float) -> str:
+    ts_ms = int(time_stamp * 1000)
+    return f"{ts_ms} ms"
+
+
+def validate_request_image():
+    if 'image' not in request.files:
+        return False, jsonify({"error": "No image file provided"})
+
+    image_file = request.files['image']
+
+    if image_file.mimetype not in ['image/jpeg', 'image/png']:
+        return False, jsonify({"error": "Unsupported image type"})
+
+    try:
+        image = Image.open(image_file)
+        image.verify()
+        return True, None
+    except Exception as e:
+        return False, jsonify({"error": "Invalid image file"})
+
+
+def detect_faces(image, logger: Logger):
     start = time()
 
     results = face_detection_model(image)
     boxes = results[0].boxes
 
     end = time()
-    logging.info(f"Face detection time: {end - start}")
+    logger.info(f"Face detection found {len(boxes)} faces in {get_formated_mili_seconds(end - start)}")
 
     return boxes
 
 
-def is_minor(image):
-    start = time()
-
+def predict_minor_score(image):
     image = image[:, :, :3]
     image = cv2.resize(image, IMG_SIZE, interpolation=cv2.INTER_AREA)
     image = image / 255.0
     image = np.expand_dims(image, axis=0)
 
+    start = time()
     prediction = age_model.predict(image, verbose=False)
-    result = prediction[0][0] > AGE_MODEL_THRESHOLD
-
     end = time()
-    logging.info(f"Minor prediction time: {end - start}")
 
-    return result
+    return prediction[0][0], end - start
 
 
 def pixel_face(face_image):
@@ -96,19 +115,22 @@ def hc():
 
 @app.route('/blur', methods=['POST'])
 def blur():
+    request_ts_start = time()
+    request_uuid = f"request_{uuid.uuid4()}"
+    request_logger = get_debug_logger(request_uuid)
+    request_logger.info(f"Processing {request_uuid} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
     try:
-        request_ts_start = time()
-
-        # Image validation
-        if 'image' not in request.files:
-            return jsonify({"error": "No image file provided"}), 400
-
+        # Validate the request image and load it
+        is_image_valid, response = validate_request_image()
+        if not is_image_valid:
+            return response, 400
         image = Image.open(request.files['image'])
 
-        # Face detection
-        boxes = detect_faces(image)
+        # Faces detection
+        boxes = detect_faces(image, request_logger)
 
-        for box in boxes:
+        for idx, box in enumerate(boxes):
             top_left_x = int(box.xyxy.tolist()[0][0])
             top_left_y = int(box.xyxy.tolist()[0][1])
             bottom_right_x = int(box.xyxy.tolist()[0][2])
@@ -118,21 +140,33 @@ def blur():
             img_array = np.array(image)
             face = img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
 
-            if is_minor(face):
+            minor_score, elapsed_time = predict_minor_score(face)
+            is_minor = minor_score > AGE_MODEL_THRESHOLD
+            if is_minor:
                 face = pixel_face(face)
+
+            request_logger.info(
+                f"Face {idx + 1} detected at ({top_left_x}, {top_left_y}) - ({bottom_right_x}, {bottom_right_y})")
+            request_logger.info(
+                f"Face {idx + 1} predicted as {'minor' if is_minor else 'adult'} (score: {minor_score:.2f}) in {get_formated_mili_seconds(elapsed_time)}")
 
             img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x] = face
             image = Image.fromarray(img_array)
 
-        # Return the image pixelated as an API response
+        # Prepare the return image pixelated as an API response
         output = io.BytesIO()
         image = image.convert('RGB')
         image.save(output, format='JPEG')
         output.seek(0)
-        return send_file(output, mimetype='image/jpeg')
+        response = send_file(output, mimetype='image/jpeg')
+
+        request_ts_end = time()
+        request_logger.info(f"Request processing time: {request_ts_end - request_ts_start}")
+
+        return response
 
     except Exception as e:
-        logging.error(f"Error processing image: {e}")
+        request_logger.error(f"Error processing image for request {request_uuid}: {e}")
         return {'error': 'Failed to process image'}, 500
 
 
