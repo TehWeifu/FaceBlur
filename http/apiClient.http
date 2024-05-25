@@ -14,3 +14,9 @@ Content-Type: image/png
 
 < ./imgs/kids.jpg
 --WebAppBoundary--
+
+# Error responses
+
+### Blur without image
+POST {{host}}:5000/blur
+Content-Type: multipart/form-data; boundary=WebAppBoundary

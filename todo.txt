@@ -1,1 +1,2 @@
-- Jugar con distintas prevalencias que se ajusten al problema del instituto.
+- Play with different prevalence, implement bayesian optimization.
+- Send docker logs to some useful place.
