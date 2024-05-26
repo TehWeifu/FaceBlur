@@ -49,8 +49,9 @@ def validate_request_image():
 
     image_file = request.files['image']
 
-    if image_file.mimetype not in ['image/jpeg', 'image/png']:
-        return False, jsonify({"error": "Unsupported image type"})
+    # FIXME: Mime type does not work when image if forwarded the api gateway
+    # if image_file.mimetype not in ['image/jpeg', 'image/png']:
+    #     return False, jsonify({"error": "Unsupported image type"})
 
     try:
         image = Image.open(image_file)
