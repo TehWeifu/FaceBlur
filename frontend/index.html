@@ -1,0 +1,42 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+</head>
+<body>
+<h1>Upload an Image</h1>
+<form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="image" name="image" accept="image/*" required>
+    <button type="submit">Upload</button>
+</form>
+<div id="result"></div>
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData();
+        const imageFile = document.getElementById('image').files[0];
+        formData.append('image', imageFile);
+
+        const response = await fetch('/api/blur', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const img = document.createElement('img');
+            img.src = url;
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('result').appendChild(img);
+        } else {
+            const error = await response.json();
+            document.getElementById('result').textContent = `Error: ${error.message}`;
+        }
+    });
+</script>
+</body>
+</html>
