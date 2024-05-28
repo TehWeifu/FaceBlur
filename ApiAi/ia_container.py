@@ -61,6 +61,40 @@ def validate_request_image():
         return False, jsonify({"error": "Invalid image file"})
 
 
+def rectangle_to_square(x1, y1, x2, y2, image_width, image_height):
+    # Calculate the width and height of the rectangle
+    width = x2 - x1
+    height = y2 - y1
+
+    # Calculate the center of the rectangle
+    center_x = x1 + width / 2
+    center_y = y1 + height / 2
+
+    # Determine the size of the square (max of width and height)
+    side_length = max(width, height)
+
+    # Calculate the top-left and bottom-right coordinates of the square
+    new_x1 = max(0, center_x - side_length / 2)
+    new_y1 = max(0, center_y - side_length / 2)
+    new_x2 = min(image_width, center_x + side_length / 2)
+    new_y2 = min(image_height, center_y + side_length / 2)
+
+    # Ensure the square is within the image boundaries
+    if new_x2 - new_x1 < side_length:
+        if new_x1 == 0:
+            new_x2 = new_x1 + side_length
+        else:
+            new_x1 = new_x2 - side_length
+
+    if new_y2 - new_y1 < side_length:
+        if new_y1 == 0:
+            new_y2 = new_y1 + side_length
+        else:
+            new_y1 = new_y2 - side_length
+
+    return int(new_x1), int(new_y1), int(new_x2), int(new_y2)
+
+
 def detect_faces(image, logger: Logger):
     start = time()
 
@@ -84,6 +118,14 @@ def predict_minor_score(image):
     end = time()
 
     return prediction[0][0], end - start
+
+
+def random_minor_score(image):
+    return np.random.uniform(0, 1), 0
+
+
+def all_minor_score(image):
+    return 1, 0
 
 
 def pixel_face(face_image):
@@ -137,11 +179,22 @@ def blur():
             bottom_right_x = int(box.xyxy.tolist()[0][2])
             bottom_right_y = int(box.xyxy.tolist()[0][3])
 
+            top_left_x, top_left_y, bottom_right_x, bottom_right_y = rectangle_to_square(
+                top_left_x, top_left_y, bottom_right_x, bottom_right_y, image.width, image.height
+            )
+
             # Create a new image with the face detected
             img_array = np.array(image)
             face = img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
 
-            minor_score, elapsed_time = predict_minor_score(face)
+            # Predict if the face is minor (All, Random or Predict)
+            if request.args.get('mode') == 'all':
+                minor_score, elapsed_time = all_minor_score(face)
+            elif request.args.get('mode') == 'random':
+                minor_score, elapsed_time = random_minor_score(face)
+            else:
+                minor_score, elapsed_time = predict_minor_score(face)
+
             is_minor = minor_score > AGE_MODEL_THRESHOLD
             if is_minor:
                 face = pixel_face(face)
@@ -152,6 +205,13 @@ def blur():
                 f"Face {idx + 1} predicted as {'minor' if is_minor else 'adult'} (score: {minor_score:.2f}) in {get_formated_mili_seconds(elapsed_time)}")
 
             img_array[top_left_y:bottom_right_y, top_left_x:bottom_right_x] = face
+
+            if (request.args.get('debug') == 'on'):
+                img_array = cv2.rectangle(img_array, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y),
+                                          (0, 255, 0), 2)
+                cv2.putText(img_array, f"{minor_score:.2f}", (top_left_x + 5, top_left_y + 40),
+                            cv2.FONT_HERSHEY_SIMPLEX, .7, (0, 255, 0), 2)
+
             image = Image.fromarray(img_array)
 
         # Prepare the return image pixelated as an API response

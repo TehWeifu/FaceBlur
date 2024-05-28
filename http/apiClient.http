@@ -5,7 +5,7 @@ GET {{host}}:5000/hc
 GET {{host}}:5000/hc_model
 
 ### Blur a face
-POST {{host}}:5000/blur
+POST {{host}}:5001/blur
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
@@ -15,8 +15,46 @@ Content-Type: image/jpeg
 < ./imgs/kids.jpg
 --WebAppBoundary--
 
-# Error responses
 
+
+### Blur a face with debug parameter
+POST {{host}}:5001/blur?debug=on
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="sampleFile.png"
+Content-Type: image/jpeg
+
+< ./imgs/fornite.png
+--WebAppBoundary--
+
+
+
+### Blur all faces
+POST {{host}}:5001/blur?mode=ai
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="sampleFile.png"
+Content-Type: image/jpeg
+
+< ./imgs/toddler.png
+--WebAppBoundary--
+
+
+### Blur all faces with debug parameter
+POST {{host}}:5001/blur?mode=random&debug=on
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="sampleFile.png"
+Content-Type: image/jpeg
+
+< ./imgs/kids.jpg
+--WebAppBoundary--
+
+
+# Error responses
 ### Blur without image
 POST {{host}}:5000/blur
 Content-Type: multipart/form-data; boundary=WebAppBoundary
