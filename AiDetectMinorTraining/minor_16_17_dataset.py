@@ -7,6 +7,7 @@ dataset_path = './../data/face_age_16_17'
 
 os.makedirs(dataset_path, exist_ok=True)
 os.makedirs(f"{dataset_path}/adult", exist_ok=True)
+os.makedirs(f"{dataset_path}/minor", exist_ok=True)
 
 images_16 = os.listdir('./../data/face_age/016')
 images_17 = os.listdir('./../data/face_age/017')
