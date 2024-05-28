@@ -150,6 +150,10 @@ def pixel_face(face_image):
     return pixelated_image
 
 
+def blur_face(image):
+    return cv2.GaussianBlur(image, (99, 99), 10)
+
+
 @app.route('/hc', methods=['GET'])
 def hc():
     server_ts_current = time()
@@ -197,7 +201,10 @@ def blur():
 
             is_minor = minor_score > AGE_MODEL_THRESHOLD
             if is_minor:
-                face = pixel_face(face)
+                if request.args.get('type') == 'blur':
+                    face = blur_face(face)
+                else:
+                    face = pixel_face(face)
 
             request_logger.info(
                 f"Face {idx + 1} detected at ({top_left_x}, {top_left_y}) - ({bottom_right_x}, {bottom_right_y})")

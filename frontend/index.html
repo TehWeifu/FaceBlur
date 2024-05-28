@@ -1,4 +1,5 @@
 <!-- frontend/index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,6 +117,32 @@
             <h2>Upload a picture</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <input type="file" id="image" name="image" accept="image/*" required>
+
+                <div>
+                    <h3>Blur Target</h3>
+                    <input type="radio" id="minor" name="mode" value="minor" checked>
+                    <label for="minor">Minor (AI)</label>
+                    <input type="radio" id="all" name="mode" value="all">
+                    <label for="all">All</label>
+                    <input type="radio" id="random" name="mode" value="random">
+                    <label for="random">Random</label>
+                </div>
+
+                <div>
+                    <h3>Blur Type</h3>
+                    <input type="radio" id="blur" name="type" value="blur" checked>
+                    <label for="blur">Gaussian</label>
+                    <input type="radio" id="pixelate" name="type" value="pixelate">
+                    <label for="pixelate">Pixelate</label>
+                </div>
+
+                <div>
+                    <h3>Debug</h3>
+                    <!--                Checkbox for debug mode-->
+                    <input type="checkbox" id="debug" name="debug">
+                    <label for="debug">Debug</label>
+                </div>
+
                 <button type="submit">Upload</button>
             </form>
         </div>
@@ -134,7 +161,19 @@
         const imageFile = document.getElementById('image').files[0];
         formData.append('image', imageFile);
 
-        const response = await fetch('/api/blur', {
+        let query_params = "?"
+
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        query_params += `mode=${mode}&`
+
+        const type = document.querySelector('input[name="type"]:checked').value;
+        query_params += `type=${type}&`
+
+        const debug = document.getElementById('debug').checked;
+        query_params += `debug=${debug}`
+
+
+        const response = await fetch(`/api/blur${query_params}`, {
             method: 'POST',
             body: formData
         });

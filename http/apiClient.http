@@ -25,7 +25,7 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="sampleFile.png"
 Content-Type: image/jpeg
 
-< ./imgs/fornite.png
+< ./imgs/kids.jpg
 --WebAppBoundary--
 
 
@@ -43,7 +43,7 @@ Content-Type: image/jpeg
 
 
 ### Blur all faces with debug parameter
-POST {{host}}:5001/blur?mode=random&debug=on
+POST {{host}}:5001/blur?mode=all&type=blur
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
