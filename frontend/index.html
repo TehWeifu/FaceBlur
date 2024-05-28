@@ -4,15 +4,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload</title>
+    <title>Face Blur</title>
+
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #FFD1DC;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            margin-top: 20px;
+        }
+
+        .content {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50%;
+        }
+
+        .upload form {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .upload form * {
+            padding: 20px 10px;
+        }
+
+        #result {
+            display: flex;
+            justify-content: center;
+            width: 50%;
+        }
+
+        .blurred-text {
+            font-size: 6em;
+            color: cornflowerblue;
+            text-align: center;
+            position: relative;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .blurred-text::before {
+            content: 'Face Blur Face Blur';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            color: cornflowerblue;
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0.6;
+        }
+
+        h2 {
+            color: cornflowerblue;
+            text-shadow: 0 0 10px rgba(100, 149, 237, 0.7);
+        }
+
+        /*Cool and simple button effect*/
+        button[type="submit"] {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #FFD1DC;
+            color: cornflowerblue;
+            border: 2px solid cornflowerblue;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(100, 149, 237, 0.7);
+        }
+
+        button[type="submit"]:hover {
+            background-color: cornflowerblue;
+            color: #FFD1DC;
+        }
+
+        button[type="submit"]:active {
+            transform: scale(0.95);
+        }
+
+    </style>
 </head>
 <body>
-<h1>Upload an Image</h1>
-<form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" id="image" name="image" accept="image/*" required>
-    <button type="submit">Upload</button>
-</form>
-<div id="result"></div>
+<div class="container">
+
+    <h1 class="blurred-text">Face Blur</h1>
+
+    <div class="content">
+        <div class="upload">
+            <h2>Upload a picture</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="image" name="image" accept="image/*" required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+
+        <div id="result">
+            <h2>Result</h2>
+        </div>
+    </div>
+
+</div>
+
 <script>
     document.getElementById('uploadForm').addEventListener('submit', async (event) => {
         event.preventDefault();
