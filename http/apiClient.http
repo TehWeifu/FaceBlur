@@ -5,7 +5,7 @@ GET {{host}}:5000/hc
 GET {{host}}:5000/hc_model
 
 ### Blur a face
-POST {{host}}:5001/blur
+POST {{host}}:5000/blur
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
@@ -18,7 +18,7 @@ Content-Type: image/jpeg
 
 
 ### Blur a face with debug parameter
-POST {{host}}:5001/blur?debug=on
+POST {{host}}:5000/blur?debug=on
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
@@ -31,7 +31,7 @@ Content-Type: image/jpeg
 
 
 ### Blur all faces
-POST {{host}}:5001/blur?mode=ai
+POST {{host}}:5000/blur?mode=ai
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
@@ -43,7 +43,7 @@ Content-Type: image/jpeg
 
 
 ### Blur all faces with debug parameter
-POST {{host}}:5001/blur?mode=all&type=blur
+POST {{host}}:5000/blur?mode=random&type=blur&debug=on
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary

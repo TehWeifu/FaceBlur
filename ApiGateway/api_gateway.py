@@ -44,7 +44,9 @@ def blur():
     image = request.files['image']
 
     try:
-        response = requests.post(f"{AI_SERVICE_HOST}/blur", files={'image': image})
+        query_string = request.query_string.decode('utf-8')
+
+        response = requests.post(f"{AI_SERVICE_HOST}/blur?{query_string}", files={'image': image})
         if response.status_code == 200:
             return response.content, 200, {'Content-Type': 'image/jpeg'}
         else:
