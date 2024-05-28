@@ -108,12 +108,19 @@
         h1, h2, h3 {
             text-align: center;
         }
+
+        .blurry-text {
+            color: transparent !important;
+            text-shadow: 0 0 5px rgba(135, 206, 250, 0.8);
+            font-size: 4em !important;
+        }
+
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>Face Blur</h1>
+        <h1 class="blurry-text">Face Blur</h1>
     </div>
     <div class="content">
         <div class="upload">
@@ -132,7 +139,7 @@
                 <div>
                     <h3>Blur Type</h3>
                     <input type="radio" id="blur" name="type" value="blur" checked>
-                    <label for="blur">Gaussian</label>
+                    <label for="blur">Blur</label>
                     <input type="radio" id="pixelate" name="type" value="pixelate">
                     <label for="pixelate">Pixelate</label>
                 </div>
