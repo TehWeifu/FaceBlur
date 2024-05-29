@@ -25,6 +25,7 @@ server_ts_start = time()
 
 face_detection_model = YOLO('models/FaceDetectionNet.pt')
 age_model = tf.keras.models.load_model('models/AgeNet.h5')
+emoji = Image.open('./imgs/emoji.png').convert("RGBA")
 
 
 def get_debug_logger(name: str) -> Logger:
@@ -154,6 +155,27 @@ def blur_face(image):
     return cv2.GaussianBlur(image, (99, 99), 10)
 
 
+def overlay_emoji(face_image, emoji):
+    # Resize emoji to match the size of the face
+    face_image = Image.fromarray(face_image)
+    emoji_resized = emoji.resize(face_image.size, Image.LANCZOS)
+
+    # Convert PIL images to OpenCV format
+    face_image_cv = cv2.cvtColor(np.array(face_image), cv2.COLOR_RGB2BGR)
+    emoji_cv = cv2.cvtColor(np.array(emoji_resized), cv2.COLOR_RGBA2BGRA)
+
+    # Create a mask of the emoji
+    emoji_gray = cv2.cvtColor(emoji_cv, cv2.COLOR_BGRA2GRAY)
+    _, mask = cv2.threshold(emoji_gray, 1, 255, cv2.THRESH_BINARY)
+
+    # Overlay the emoji on the face
+    emoji_area = face_image_cv[:emoji_cv.shape[0], :emoji_cv.shape[1]]
+    emoji_area[np.where(mask)] = 0
+    emoji_area += emoji_cv[:, :, :3]
+
+    return Image.fromarray(cv2.cvtColor(face_image_cv, cv2.COLOR_BGR2RGB))
+
+
 @app.route('/hc', methods=['GET'])
 def hc():
     server_ts_current = time()
@@ -203,6 +225,8 @@ def blur():
             if is_minor:
                 if request.args.get('type') == 'blur':
                     face = blur_face(face)
+                elif request.args.get('type') == 'emoji':
+                    face = overlay_emoji(face, emoji)
                 else:
                     face = pixel_face(face)
 

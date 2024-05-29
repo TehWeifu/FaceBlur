@@ -54,3 +54,59 @@ pip install -r requirements.txt
 
 2. Prepare the datasets. You can use the scripts in the `AiDetectMinorTraining` folder according to your needs.
 3. Train the model by running the notebook `DetectMinorTraining.ipynb`.
+
+## API Usage
+
+### 1. Health Check (`/hc`)
+
+- **Method**: GET
+- **Description**: Returns the API Gateway server status, along with the uptime since the server.
+- **Parameters**: None
+- **Response Format**: JSON object with keys:
+    - status: Server status
+    - uptime: seconds since the server was launched
+
+- **Examples**
+    - Success response:
+        ```json
+        {
+            "status": "ok",
+            "uptime": "4928.41"
+        }
+        ```
+
+### 2. Health Check (`/hc_model`)
+
+- **Method**: GET
+- **Description**: Returns the AI service server status, along with the uptime since the server.
+- **Parameters**: None
+- **Response Format**: JSON object with keys:
+    - status: Server status
+    - uptime: seconds since the server was launched
+
+- **Examples**
+    - Success response:
+        ```json
+        {
+            "status": "ok",
+            "uptime": "420.69"
+        }
+        ```
+
+### 3. Blur (`/blur`)
+
+- **Method**: POST
+- **Description**: Blurs the face of people in a picture. According to the parameters given
+- **Parameters**:
+    - Query parameters
+        - mode: Determines the targets of the blurring. Can be `all`, `minors`, or `random`. 'minors' is default
+        - type: Determines the type of blurring. Can be `blur`, `pixelate` or `emoji`. 'pixelate' is default
+        - debug: Adds debugging information to the image. Can be `on` or `off`. 'off' is default
+    - Form data
+        - image: Image with a .jpg or .jpeg, .png extension
+- **Response Format**: Image in .jpeg format
+
+- **Examples**
+    - Sample request: `http://localhost:80/blur?mode=minors&type=pixelate&debug=on`
+    - Success Response:
+        - Image with the faces blurred
