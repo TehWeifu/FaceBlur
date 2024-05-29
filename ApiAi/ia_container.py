@@ -24,7 +24,7 @@ app = Flask(__name__)
 server_ts_start = time()
 
 face_detection_model = YOLO('models/FaceDetectionNet.pt')
-age_model = tf.keras.models.load_model('models/AgeNet.keras')
+age_model = tf.keras.models.load_model('models/AgeNet.h5')
 
 
 def get_debug_logger(name: str) -> Logger:
